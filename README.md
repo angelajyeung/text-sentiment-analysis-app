@@ -11,3 +11,5 @@ pinned: false
 
 # text-sentiment-analysis-app
 🤗spaces deployment of a streamlit app
+
+GitHub Repo: https://github.com/pysentimiento/pysentimiento
