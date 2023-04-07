@@ -13,7 +13,8 @@ st.markdown("")
 analyzer = create_analyzer(task="sentiment", lang="en")
 
 # text input
-text = st.text_input("Enter text here", "")
+default = "I am happy."
+text = st.text_input("Enter text here", default)
 
 # sentiment analysis of input text
 if st.button("Submit"):

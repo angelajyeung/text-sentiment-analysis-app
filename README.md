@@ -12,4 +12,6 @@ pinned: false
 # text-sentiment-analysis-app
 🤗spaces deployment of a streamlit app
 
-GitHub Repo: https://github.com/pysentimiento/pysentimiento
+Link to HuggingFace Space: https://huggingface.co/spaces/angelajyeung/text-sentiment-analysis-app
+
+Sentiment Analysis Model Used: https://github.com/pysentimiento/pysentimiento
