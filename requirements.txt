@@ -1,3 +1,2 @@
 streamlit
-pysentimiento
-  GitHub Repo: https://github.com/pysentimiento/pysentimiento
+pysentimiento==0.5.2
