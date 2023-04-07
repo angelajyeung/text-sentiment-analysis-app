@@ -1,2 +1,2 @@
 streamlit
-pysentimiento==0.5.2
+pysentimiento==0.6.6
