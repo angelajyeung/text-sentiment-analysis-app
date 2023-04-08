@@ -14,7 +14,7 @@ analyzer = create_analyzer(task="sentiment", lang="en")
 
 # text input
 default = "I am happy."
-text = st.text_input("Enter text here", default)
+text = st.text_area("Enter text here", default)
 
 # sentiment analysis of input text
 if st.button("Submit"):
