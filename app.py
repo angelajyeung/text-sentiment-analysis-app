@@ -13,13 +13,13 @@ st.markdown("")
 classifier = pipeline(task="sentiment-analysis")
 
 # text input
-default = "I am happy."
+default = "I am happy today."
 text = st.text_area("Enter text here", default)
 
 # sentiment analysis of input text
 if st.button("Submit"):
     # analyze the text
-    prediction = classifier(default)
-    preds = [{"Score: ": round(pred["score"], 4), "Label: ": pred["label"]} for pred in prediction]
+    preds = classifier("I am happy today.")
+    preds = [{"score": round(pred["score"], 4), "label": pred["label"]} for pred in preds]
     # print the sentiment
-    st.write(preds)
+    preds
