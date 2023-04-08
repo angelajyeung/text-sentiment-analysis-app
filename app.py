@@ -22,4 +22,4 @@ if st.button("Submit"):
     prediction = classifier(default)
     preds = [{"Score: ": round(pred["score"], 4), "Label: ": pred["label"]} for pred in prediction]
     # print the sentiment
-    st.write(preds)
+    preds
