@@ -19,7 +19,7 @@ text = st.text_area("Enter text here", default)
 # sentiment analysis of input text
 if st.button("Submit"):
     # analyze the text
-    preds = classifier("I am happy today.")
-    preds = [{"score": round(pred["score"], 4), "label": pred["label"]} for pred in preds]
+    prediction = classifier("I am happy today.")
+    preds = {"score": round(prediction["score"], 4), "label": prediction["label"]}
     # print the sentiment
     preds
