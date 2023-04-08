@@ -20,6 +20,6 @@ text = st.text_area("Enter text here", default)
 if st.button("Submit"):
     # analyze the text
     prediction = classifier(default)
-    preds = [{"Score: ": round(pred["score"], 4), "Label: ": pred["label"]} for pred in prediction]
+    preds = "Score: %s, Label: %s".format(round(prediction["score"], 4), prediction["label"])
     # print the sentiment
-    preds
+    st.write(preds)
