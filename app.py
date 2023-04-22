@@ -40,7 +40,7 @@ def extract_toxicity(text):
     return toxicity_classes[max_class_idx], results[0]["scores"][max_class_idx]
 
 # Load the dataset
-dataset = pd.read_csv('data.csv')
+dataset = pd.read_csv('test.csv')
 
 # Define the columns for the table
 columns = ["Tweet", "Toxicity Class", "Probability"]
