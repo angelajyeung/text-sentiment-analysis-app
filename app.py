@@ -126,7 +126,7 @@ test_data = pd.read_csv("test.csv")
 toxicities = []
 for tweet in test_data["comment_text"]:
     result = toxicity_classifier(tweet)[0]
-    highest_toxicity_index = max(range(len(result["scores"])), key=result["scores"].__getitem__)
+    highest_toxicity_index = result["scores"].index(max(result["scores"]))
     highest_toxicity_label = toxicity_classifier.model.config.id2label[highest_toxicity_index]
     highest_toxicity_score = result["scores"][highest_toxicity_index]
     toxicities.append((tweet[:50], highest_toxicity_label, highest_toxicity_score))
