@@ -122,14 +122,14 @@ toxicity_classifier = pipeline("text-classification", model=model, tokenizer=tok
 # Load the test data
 test_data = pd.read_csv("test.csv")
 
-# Process each tweet and get the highest toxicity class and its probability
+# Process each comment and get the highest toxicity class and its probability
 toxicities = []
-for tweet in test_data["comment_text"]:
-    result = toxicity_classifier(tweet)[0]
-    highest_toxicity_index = max(range(len(result["scores"])), key=result["scores"].__getitem__)
+for comment in test_data["comment_text"]:
+    result = toxicity_classifier(comment)[0]
+    highest_toxicity_index = max(range(len(result["scores"][0])), key=result["scores"][0].__getitem__)
     highest_toxicity_label = toxicity_classifier.model.config.id2label[highest_toxicity_index]
-    highest_toxicity_score = result["scores"][highest_toxicity_index]
-    toxicities.append((tweet[:50], highest_toxicity_label, highest_toxicity_score))
+    highest_toxicity_score = result["scores"][0][highest_toxicity_index]
+    toxicities.append((comment[:50], highest_toxicity_label, highest_toxicity_score))
 
 # Display the results in a table
-st.write(pd.DataFrame(toxicities, columns=["Tweet", "Toxicity Class", "Probability"]))
+st.write(pd.DataFrame(toxicities, columns=["Comment", "Toxicity Class", "Probability"]))
