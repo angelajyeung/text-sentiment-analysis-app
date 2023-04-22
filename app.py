@@ -36,8 +36,10 @@ toxicity_classes = ["threat", "obscene", "insult", "identity_hate"]
 # Define the function to extract the highest toxicity class and its probability
 def extract_toxicity(text):
     results = model(text)
-    max_class_idx = results[0]["scores"].argmax()
-    return toxicity_classes[max_class_idx], results[0]["scores"][max_class_idx]
+    max_class_idx = results[0].argmax()
+    toxicity_class = class_names[max_class_idx]
+    probability = results[0][max_class_idx].item()
+    return toxicity_class, probability
 
 # Load the dataset
 dataset = pd.read_csv('test.csv')
