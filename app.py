@@ -58,7 +58,7 @@ result_table = pd.DataFrame(columns=['Tweet', 'Toxicity Class', 'Probability'])
 for i in range(len(data)):
     tweet = data.iloc[i]['comment_text']
     scores = classifier(tweet)
-    highest_index = scores[0]['scores'].index(max(scores[0]['scores']))
+    highest_index = scores[0].index(max(scores[0]))
     highest_class = toxicity_labels[highest_index]
     highest_prob = scores[0]['scores'][highest_index]
     result_table = result_table.append({'Tweet': tweet, 'Toxicity Class': highest_class, 'Probability': highest_prob}, ignore_index=True)
