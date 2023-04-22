@@ -28,18 +28,17 @@ import pandas as pd
 import streamlit as st
 from transformers import pipeline, AutoTokenizer
 
+# @st.cache(allow_output_mutation=True)
+# def load_model(model_name):
+#     tokenizer = AutoTokenizer.from_pretrained(model_name)
+#     model = pipeline("text-classification", model=model_name, tokenizer=tokenizer)
+#     return model
 
-@st.cache(allow_output_mutation=True)
-def load_model(model_name):
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-    model = pipeline("text-classification", model=model_name, tokenizer=tokenizer)
-    return model
 
-
-def predict_toxicity(model, text):
-    predictions = model(text)
-    max_label, max_prob = max(predictions, key=lambda x: x['score'])
-    return max_label, max_prob
+# def predict_toxicity(model, text):
+#     predictions = model(text)
+#     max_label, max_prob = max(predictions, key=lambda x: x['score'])
+#     return max_label, max_prob
 
 # title
 st.title("Text Toxicity Classifier")
@@ -56,15 +55,15 @@ models = {
     "electra-base": "google/electra-base-discriminator",
 }
 
-model_name = st.sidebar.selectbox("Select a finetuned model", list(models.keys()))
+# model_name = st.sidebar.selectbox("Select a finetuned model", list(models.keys()))
 
-model = load_model(models[model_name])
+# model = load_model(models[model_name])
 
-df = pd.read_csv("test.csv")  
+# df = pd.read_csv("test.csv")  
 
-results = []
-for text in df["comment_text"]:
-    max_label, max_prob = predict_toxicity(model, text)
-    results.append((text, max_label, max_prob))
+# results = []
+# for text in df["comment_text"]:
+#     max_label, max_prob = predict_toxicity(model, text)
+#     results.append((text, max_label, max_prob))
 
-st.write(pd.DataFrame(results, columns=["Text", "Toxicity Class", "Probability"]))
+# st.write(pd.DataFrame(results, columns=["Text", "Toxicity Class", "Probability"]))
