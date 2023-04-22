@@ -28,12 +28,6 @@ import streamlit as st
 import pandas as pd
 from transformers import pipeline, AutoTokenizer, AutoModelForSequenceClassification
 
-# Load the pre-trained sentiment analysis model
-model_name = st.sidebar.selectbox("Select pre-trained model", ["bert-base-uncased", "roberta-base", "distilbert-base-uncased"])
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=6)
-classifier = pipeline("text-classification", model=model, tokenizer=tokenizer, return_all_scores=True)
-
 # Load the Jigsaw Toxic Comment Classification Challenge dataset
 data = pd.read_csv('test.csv')
 
@@ -44,11 +38,17 @@ toxicity_labels = ['toxic', 'severe_toxic', 'obscene', 'threat', 'insult', 'iden
 st.title("Toxicity Classification")
 st.sidebar.title("Select Options")
 
+# Load the pre-trained sentiment analysis model
+model_name = st.sidebar.selectbox("Select pre-trained model", ["bert-base-uncased", "roberta-base", "distilbert-base-uncased"])
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=6)
+classifier = pipeline("text-classification", model=model, tokenizer=tokenizer, return_all_scores=True)
+
 # Create the sidebar for selecting the model
-st.sidebar.subheader("Select pre-trained model")
+# st.sidebar.subheader("Select pre-trained model")
 
 # Show the dropdown menu for selecting the model
-st.sidebar.selectbox("Select pre-trained model", ["bert-base-uncased", "roberta-base", "distilbert-base-uncased"])
+# st.sidebar.selectbox("Select pre-trained model", ["bert-base-uncased", "roberta-base", "distilbert-base-uncased"])
 
 # Create the table to display the results
 st.subheader("Results")
