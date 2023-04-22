@@ -25,41 +25,36 @@
 #     st.write(preds)
 
 import streamlit as st
+from transformers import pipeline
 import pandas as pd
-from transformers import pipeline, AutoTokenizer, AutoModelForSequenceClassification
 
-# Load the Jigsaw Toxic Comment Classification Challenge dataset
-data = pd.read_csv('test.csv')
+# Set up the model and the tokenizer
+model_name = st.sidebar.selectbox("Select Model", ["bert-base-uncased", "roberta-base"])
+model = pipeline("text-classification", model=model_name, tokenizer=model_name)
+toxicity_classes = ["threat", "obscene", "insult", "identity_hate"]
 
-# Define the toxicity labels
-toxicity_labels = ['toxic', 'severe_toxic', 'obscene', 'threat', 'insult', 'identity_hate']
+# Define the function to extract the highest toxicity class and its probability
+def extract_toxicity(text):
+    results = model(text, multi_label=True)
+    max_class_idx = results[0]["scores"].argmax()
+    return toxicity_classes[max_class_idx], results[0]["scores"][max_class_idx]
 
-# Create the app layout
-st.title("Toxicity Classification")
-st.sidebar.title("Select Options")
+# Load the dataset
+dataset = pd.read_csv('data.csv')
 
-# Create the sidebar for selecting the model
-st.sidebar.subheader("Select pre-trained model")
+# Define the columns for the table
+columns = ["Tweet", "Toxicity Class", "Probability"]
 
-# Show the dropdown menu for selecting the model
-model_name = st.sidebar.selectbox("Select pre-trained model", ["bert-base-uncased", "roberta-base", "distilbert-base-uncased"])
-
-# Load the pre-trained sentiment analysis model
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=6)
-classifier = pipeline("text-classification", model=model, tokenizer=tokenizer, return_all_scores=True)
-
-# Create the table to display the results
-st.subheader("Results")
-st.write("")
-
-# Display the table with the tweet, the highest toxicity class, and its probability
-result_table = pd.DataFrame(columns=['Tweet', 'Toxicity Class', 'Probability'])
-for i in range(len(data)):
-    tweet = data.iloc[i]['comment_text']
-    scores = classifier(tweet)
-    highest_index = scores[0].index(max(scores[0]))
-    highest_class = toxicity_labels[highest_index]
-    highest_prob = scores[0]['scores'][highest_index]
-    result_table = result_table.append({'Tweet': tweet, 'Toxicity Class': highest_class, 'Probability': highest_prob}, ignore_index=True)
-st.table(result_table)
+# Set up the app
+st.title("Toxicity Detector")
+st.sidebar.markdown("### Model Configuration")
+st.sidebar.markdown("Select a model and click on 'Run' to load it.")
+if st.sidebar.button("Run"):
+    st.markdown("## Results")
+    # Display the table of results
+    for i, row in dataset.iterrows():
+        st.write(f"**Tweet {i+1}:** {row['comment_text']}")
+        # Extract the highest toxicity class and its probability
+        class_label, class_prob = extract_toxicity(row["comment_text"])
+        # Display the results in a table
+        st.table([[row["comment_text"], class_label, class_prob]])
