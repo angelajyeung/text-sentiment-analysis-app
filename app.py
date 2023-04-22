@@ -95,46 +95,41 @@
 # if __name__ == "__main__":
 #     main()
 
+# Load the necessary libraries
 import streamlit as st
 import pandas as pd
-from transformers import pipeline, AutoTokenizer, AutoModelForSequenceClassification
+from transformers import pipeline
 
-# Load the test dataset
-df_test = pd.read_csv("test.csv")
+# Define a function to classify the text based on the selected pre-trained model
+def classify_text(text, model_name):
+    # Load the pre-trained model
+    classifier = pipeline('text-classification', model=model_name, tokenizer=model_name)
+    # Classify the text
+    results = classifier(text, max_length=512)
+    # Extract the highest toxicity class and its probability
+    labels = results[0]['labels']
+    scores = results[0]['scores']
+    highest_toxicity = labels[0]
+    highest_prob = scores[0]
+    return highest_toxicity, highest_prob
 
-# Load the fine-tuned model and tokenizer
-model_name = st.selectbox("Select a fine-tuned model", ["bert-base-uncased", "roberta-base", "distilbert-base-uncased"])
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = AutoModelForSequenceClassification.from_pretrained(model_name)
+# Define the list of pre-trained models to use in the app
+model_list = ['bert-base-uncased', 'roberta-base', 'distilbert-base-uncased']
 
-# Define a function to preprocess the text
-def preprocess_text(text):
-    text = text.strip()
-    text = text.lower()
-    return text
+# Create the Streamlit app
+st.title("Toxicity Classification App")
+st.markdown("Select a pre-trained model to classify the toxicity of the text:")
 
-# Define a function to classify the toxicity of each tweet
-def classify_toxicity(tweet):
-    tweet = preprocess_text(tweet)
-    inputs = tokenizer(tweet, return_tensors="pt", padding=True, truncation=True)
-    outputs = model(**inputs)
-    probs = outputs.logits.softmax(dim=1).detach().numpy()[0]
-    labels = ["toxicity", "threat", "obscene", "insult", "identity_hate"]
-    max_index = probs.argmax()
-    max_label = labels[max_index]
-    max_prob = probs[max_index]
-    return max_label, max_prob
+# Create a dropdown menu to select the pre-trained model
+model_name = st.selectbox("Model", model_list)
 
-# Create a table showing the results
-st.title("Toxicity Classification")
-st.markdown("## Classify the toxicity of each tweet")
-st.write(df_test.head())
+# Create a text area to input the text to classify
+text = st.text_area("Enter the text to classify:")
 
-results = []
-for index, row in df_test.iterrows():
-    tweet = row["comment_text"]
-    label, prob = classify_toxicity(tweet)
-    results.append((tweet[:50] + "...", label, prob))
-
-df_results = pd.DataFrame(results, columns=["Tweet", "Toxicity Type", "Probability"])
-st.write(df_results)
+# Classify the text when the user submits it
+if st.button("Classify"):
+    # Classify the text based on the selected model
+    highest_toxicity, highest_prob = classify_text(text, model_name)
+    # Create a table to display the results
+    results_df = pd.DataFrame({'Text': [text], 'Toxicity Class': [highest_toxicity], 'Probability': [highest_prob]})
+    st.table(results_df)
