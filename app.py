@@ -95,41 +95,40 @@
 # if __name__ == "__main__":
 #     main()
 
-# Load the necessary libraries
 import streamlit as st
 import pandas as pd
-from transformers import pipeline
+from transformers import pipeline, AutoTokenizer, AutoModelForSequenceClassification
 
-# Define a function to classify the text based on the selected pre-trained model
-def classify_text(text, model_name):
-    # Load the pre-trained model
-    classifier = pipeline('text-classification', model=model_name, tokenizer=model_name)
-    # Classify the text
-    results = classifier(text, max_length=512)
-    # Extract the highest toxicity class and its probability
-    labels = results[0]['labels']
-    scores = results[0]['scores']
-    highest_toxicity = labels[0]
-    highest_prob = scores[0]
-    return highest_toxicity, highest_prob
+# Define the models and their names
+models = {
+    "BERT": "bert-base-uncased",
+    "RoBERTa": "roberta-base"
+}
 
-# Define the list of pre-trained models to use in the app
-model_list = ['bert-base-uncased', 'roberta-base', 'distilbert-base-uncased']
+# Title and subtitle
+st.title("Toxicity Classifier")
+st.markdown("## Detect different types of toxicity in text")
 
-# Create the Streamlit app
-st.title("Toxicity Classification App")
-st.markdown("Select a pre-trained model to classify the toxicity of the text:")
+# Model selection dropdown
+model_name = st.selectbox("Select a model", list(models.keys()))
 
-# Create a dropdown menu to select the pre-trained model
-model_name = st.selectbox("Model", model_list)
+# Load the tokenizer and the model
+tokenizer = AutoTokenizer.from_pretrained(models[model_name])
+model = AutoModelForSequenceClassification.from_pretrained(models[model_name])
 
-# Create a text area to input the text to classify
-text = st.text_area("Enter the text to classify:")
+# Set up the pipeline for sentiment analysis
+toxicity_classifier = pipeline("text-classification", model=model, tokenizer=tokenizer, return_all_scores=True)
 
-# Classify the text when the user submits it
-if st.button("Classify"):
-    # Classify the text based on the selected model
-    highest_toxicity, highest_prob = classify_text(text, model_name)
-    # Create a table to display the results
-    results_df = pd.DataFrame({'Text': [text], 'Toxicity Class': [highest_toxicity], 'Probability': [highest_prob]})
-    st.table(results_df)
+# Load the test data
+test_data = pd.read_csv("test.csv")
+
+# Process each tweet and get the highest toxicity class and its probability
+toxicities = []
+for tweet in test_data["comment_text"]:
+    result = toxicity_classifier(tweet)[0]
+    highest_toxicity_class = max(result["scores"])
+    highest_toxicity_index = result["scores"].index(highest_toxicity_class)
+    toxicities.append((tweet[:50], highest_toxicity_index, highest_toxicity_class))
+
+# Display the results in a table
+st.write(pd.DataFrame(toxicities, columns=["Tweet", "Toxicity Class", "Probability"]))
