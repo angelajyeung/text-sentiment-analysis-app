@@ -125,10 +125,14 @@ test_data = pd.read_csv("test.csv")
 # Process each tweet and get the highest toxicity class and its probability
 toxicities = []
 for tweet in test_data["comment_text"]:
-    result = toxicity_classifier(tweet)[0]
-    highest_toxicity_class = max(result["scores"])
-    highest_toxicity_index = result["scores"].index(highest_toxicity_class)
-    toxicities.append((tweet[:50], highest_toxicity_index, highest_toxicity_class))
+    results = toxicity_classifier(tweet)
+    highest_toxicity_class = 0
+    highest_toxicity_score = 0
+    for result in results:
+        if result["scores"][1] > highest_toxicity_score:
+            highest_toxicity_class = result["label"]
+            highest_toxicity_score = result["scores"][1]
+    toxicities.append((tweet[:50], highest_toxicity_class, highest_toxicity_score))
 
 # Display the results in a table
 st.write(pd.DataFrame(toxicities, columns=["Tweet", "Toxicity Class", "Probability"]))
