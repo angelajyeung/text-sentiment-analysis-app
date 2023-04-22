@@ -26,36 +26,34 @@
 
 import streamlit as st
 import pandas as pd
-from transformers import pipeline
+from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
 
-# Set up the model and the tokenizer
-model_name = st.sidebar.selectbox("Select Model", ["bert-base-uncased", "roberta-base"])
-model = pipeline("text-classification", model=model_name, tokenizer=model_name)
-toxicity_classes = ["threat", "obscene", "insult", "identity_hate"]
+# Load the pre-trained tokenizer and model for sentiment analysis
+tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
+model = AutoModelForSequenceClassification.from_pretrained("bert-base-uncased", num_labels=6)
+sa_pipeline = pipeline('text-classification', model=model, tokenizer=tokenizer)
 
-# Define the function to extract the highest toxicity class and its probability
-def extract_toxicity(text):
-    results = model(text)
-    max_class_idx = results[0].argmax()
-    toxicity_class = class_names[max_class_idx]
-    probability = results[0][max_class_idx].item()
-    return toxicity_class, probability
-
-# Load the dataset
-dataset = pd.read_csv('test.csv')
-
-# Define the columns for the table
-columns = ["Tweet", "Toxicity Class", "Probability"]
+# Load the test dataset
+test_df = pd.read_csv('tst.csv')
 
 # Set up the app
-st.title("Toxicity Detector")
-st.sidebar.markdown("### Model Configuration")
-st.sidebar.markdown("Select a model and click on 'Run' to load it.")
-if st.sidebar.button("Run"):
-    st.markdown("## Results")
-    # Display the table of results
-    for i, row in dataset.iterrows():
-        tweet = row["comment_text"]
-        toxicity_class, probability = extract_toxicity(tweet)
-        data = [tweet, toxicity_class, probability]
-        st.write(pd.DataFrame([data], columns=columns))
+st.title("Toxicity Classifier App")
+st.markdown("## Built with `streamlit` and `HuggingFace`")
+
+# Set up the model selection dropdown
+model_selection = st.selectbox("Select a fine-tuned model:", ["bert-base-uncased", "roberta-base", "distilbert-base-uncased"])
+
+# Set up the table to display results
+st.write("## Results")
+st.write(test_df.head())
+
+# Define a function to predict the toxicity class and its probability for each tweet
+def predict_toxicity(tweet):
+    result = sa_pipeline(tweet, max_length=512, truncation=True)
+    return result[0]['label'], result[0]['score']
+
+# Apply the predict_toxicity function to each tweet in the test dataset
+test_df["toxicity_class"], test_df["toxicity_prob"] = zip(*test_df["tweet"].apply(predict_toxicity))
+
+# Display the results in a table with tweet, toxicity class, and toxicity probability columns
+st.write(test_df[["tweet", "toxicity_class", "toxicity_prob"]])
