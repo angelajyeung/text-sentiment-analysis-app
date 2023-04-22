@@ -41,8 +41,13 @@ def predict_toxicity(model, text):
     max_label, max_prob = max(predictions, key=lambda x: x['score'])
     return max_label, max_prob
 
+# title
+st.title("Text Toxicity Classifier")
 
-st.set_page_config(page_title="Toxicity Classifier")
+# subtitle
+st.markdown("## Toxicity Classifier - Using `streamlit` -  hosted on 🤗 Spaces")
+
+st.markdown("")
 
 models = {
     "bert-base-uncased": "bert-base-uncased",
