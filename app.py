@@ -26,34 +26,71 @@
 
 import streamlit as st
 import pandas as pd
-from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
+from transformers import pipeline, AutoTokenizer, AutoModelForSequenceClassification
 
-# Load the pre-trained tokenizer and model for sentiment analysis
-tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
-model = AutoModelForSequenceClassification.from_pretrained("bert-base-uncased", num_labels=6)
-sa_pipeline = pipeline('text-classification', model=model, tokenizer=tokenizer)
+# Load the fine-tuned model from Hugging Face Model Hub
+@st.cache(allow_output_mutation=True)
+def load_model(model_name):
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    model = AutoModelForSequenceClassification.from_pretrained(model_name)
+    classifier = pipeline("text-classification", model=model, tokenizer=tokenizer)
+    return classifier
 
-# Load the test dataset
-test_df = pd.read_csv('tst.csv')
+# Define the labels and their corresponding colors
+LABELS = ["toxic", "severe_toxic", "obscene", "threat", "insult", "identity_hate"]
+COLORS = ["#ff5733", "#ffcc33", "#cc33ff", "#33ff57", "#57b5ff", "#c733ff"]
 
-# Set up the app
-st.title("Toxicity Classifier App")
-st.markdown("## Built with `streamlit` and `HuggingFace`")
+# Define a function to extract the highest-scoring label and its probability
+def extract_labels(predictions):
+    scores = [p["score"] for p in predictions]
+    max_score = max(scores)
+    max_index = scores.index(max_score)
+    return LABELS[max_index], max_score
 
-# Set up the model selection dropdown
-model_selection = st.selectbox("Select a fine-tuned model:", ["bert-base-uncased", "roberta-base", "distilbert-base-uncased"])
+# Define the Streamlit app
+def main():
+    # Title
+    st.title("Toxic Comment Classification")
 
-# Set up the table to display results
-st.write("## Results")
-st.write(test_df.head())
+    # Subtitle
+    st.markdown("## Multi-Class Classification - Using `HuggingFace` - Hosted on :hugging_face: Spaces")
 
-# Define a function to predict the toxicity class and its probability for each tweet
-def predict_toxicity(tweet):
-    result = sa_pipeline(tweet, max_length=512, truncation=True)
-    return result[0]['label'], result[0]['score']
+    # Select a model
+    model_name = st.selectbox("Select a fine-tuned model:", ["bert-base-uncased", "roberta-base", "distilbert-base-uncased"])
 
-# Apply the predict_toxicity function to each tweet in the test dataset
-test_df["toxicity_class"], test_df["toxicity_prob"] = zip(*test_df["tweet"].apply(predict_toxicity))
+    # Load the model
+    classifier = load_model(model_name)
 
-# Display the results in a table with tweet, toxicity class, and toxicity probability columns
-st.write(test_df[["tweet", "toxicity_class", "toxicity_prob"]])
+    # Load the dataset
+    data = pd.read_csv("test.csv")
+
+    # Create a table to display the tweet and its predicted class
+    st.write("## Test Data")
+    st.write(data[["comment_text"]].head(10))
+
+    # Predict the labels for each tweet
+    predictions = classifier(data["comment_text"].tolist())
+
+    # Create a table to display the predicted classes and their probabilities
+    st.write("## Predicted Classes and Probabilities")
+    for i in range(10):
+        tweet = data["comment_text"][i]
+        predicted_label, predicted_score = extract_labels(predictions[i])
+        st.write(
+            {
+                "Tweet": tweet,
+                "Predicted Class": predicted_label,
+                "Probability": f"{predicted_score:.2f}",
+            },
+            unsafe_allow_html=True,
+        )
+
+        # Add some color to the predicted label
+        predicted_color = COLORS[LABELS.index(predicted_label)]
+        st.markdown(
+            f'<span style="color:{predicted_color}">{predicted_label}</span>',
+            unsafe_allow_html=True,
+        )
+
+if __name__ == "__main__":
+    main()
