@@ -25,6 +25,7 @@
 #     st.write(preds)
 
 import streamlit as st
+import pandas as pd
 from transformers import pipeline, AutoTokenizer, AutoModelForSequenceClassification
 
 # Load the pre-trained sentiment analysis model
