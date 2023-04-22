@@ -24,46 +24,44 @@
 #     # print the sentiment
 #     st.write(preds)
 
-import pandas as pd
 import streamlit as st
-from transformers import pipeline, AutoTokenizer
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
+import torch
+import pandas as pd
 
-@st.cache(allow_output_mutation=True)
-def load_model(model_name):
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-    model = pipeline("text-classification", model=model_name, tokenizer=tokenizer)
-    return model
+st.title("Toxic Comment Classification")
+st.markdown("## Using HuggingFace Transformers - Hosted on :hugging_face: Spaces")
 
+model_names = ["bert-base-uncased", "distilbert-base-uncased", "roberta-base", "google/electra-base-discriminator"]
+model_name = st.selectbox("Select Pre-trained Model", model_names)
 
-def predict_toxicity(model, text):
-    predictions = model(text)
-    max_label, max_prob = max(predictions, key=lambda x: x['score'])
-    return max_label, max_prob
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForSequenceClassification.from_pretrained(model_name)
 
-# title
-st.title("Text Toxicity Classifier")
+def predict_toxicity(tweet):
+    inputs = tokenizer.encode_plus(
+        tweet,
+        add_special_tokens=True,
+        max_length=512,
+        padding='max_length',
+        truncation=True,
+        return_tensors='pt'
+    )
+    outputs = model(**inputs)
+    probabilities = torch.softmax(outputs.logits, dim=1).detach().numpy()[0]
+    classes = ['toxic', 'severe_toxic', 'obscene', 'threat', 'insult', 'identity_hate']
+    result = {}
+    for i, label in enumerate(classes):
+        result[label] = probabilities[i]
+    return result
 
-# subtitle
-st.markdown("## Toxicity Classifier - Using `streamlit` -  hosted on :hugging_face: Spaces")
+default_text = "I hate you"
+text = st.text_input("Enter text to classify toxicity", default_text)
+if st.button("Classify"):
+    results = predict_toxicity(text)
 
-st.markdown("")
-
-models = {
-    "bert-base-uncased": "bert-base-uncased",
-    "distilbert-base-uncased": "distilbert-base-uncased",
-    "roberta-base": "roberta-base",
-    "electra-base": "google/electra-base-discriminator",
-}
-
-model_name = st.sidebar.selectbox("Select a finetuned model", list(models.keys()))
-
-model = load_model(models[model_name])
-
-df = pd.read_csv("test.csv")
-
-results = []
-for text in df["comment_text"]:
-    max_label, max_prob = predict_toxicity(model, text)
-    results.append((text, max_label, max_prob))
-
-st.write(pd.DataFrame(results, columns=["Text", "Toxicity Class", "Probability"]))
+if 'results' in locals():
+    df = pd.read_csv('test.csv')
+    df['predicted_toxicity'] = df['comment_text'].apply(lambda x: max(predict_toxicity(x), key=predict_toxicity(x).get))
+    df['probability'] = df['comment_text'].apply(lambda x: predict_toxicity(x)[max(predict_toxicity(x), key=predict_toxicity(x).get)])
+    st.table(df[['comment_text', 'predicted_toxicity', 'probability']])
