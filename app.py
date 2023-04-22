@@ -132,7 +132,7 @@ st.write(df_test.head())
 
 results = []
 for index, row in df_test.iterrows():
-    tweet = row["tweet"]
+    tweet = row["comment_text"]
     label, prob = classify_toxicity(tweet)
     results.append((tweet[:50] + "...", label, prob))
 
