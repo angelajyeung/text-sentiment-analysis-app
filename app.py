@@ -38,17 +38,16 @@ toxicity_labels = ['toxic', 'severe_toxic', 'obscene', 'threat', 'insult', 'iden
 st.title("Toxicity Classification")
 st.sidebar.title("Select Options")
 
-# Load the pre-trained sentiment analysis model
+# Create the sidebar for selecting the model
+st.sidebar.subheader("Select pre-trained model")
+
+# Show the dropdown menu for selecting the model
 model_name = st.sidebar.selectbox("Select pre-trained model", ["bert-base-uncased", "roberta-base", "distilbert-base-uncased"])
+
+# Load the pre-trained sentiment analysis model
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=6)
 classifier = pipeline("text-classification", model=model, tokenizer=tokenizer, return_all_scores=True)
-
-# Create the sidebar for selecting the model
-# st.sidebar.subheader("Select pre-trained model")
-
-# Show the dropdown menu for selecting the model
-# st.sidebar.selectbox("Select pre-trained model", ["bert-base-uncased", "roberta-base", "distilbert-base-uncased"])
 
 # Create the table to display the results
 st.subheader("Results")
@@ -59,7 +58,7 @@ result_table = pd.DataFrame(columns=['Tweet', 'Toxicity Class', 'Probability'])
 for i in range(len(data)):
     tweet = data.iloc[i]['comment_text']
     scores = classifier(tweet)
-    highest_index = scores[0]['scores'].index(max(scores[0]['scores']))
+    highest_index = max(enumerate(scores[0]['scores']), key=lambda x: x[1])[0]
     highest_class = toxicity_labels[highest_index]
     highest_prob = scores[0]['scores'][highest_index]
     result_table = result_table.append({'Tweet': tweet, 'Toxicity Class': highest_class, 'Probability': highest_prob}, ignore_index=True)
