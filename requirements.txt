@@ -1,4 +1,3 @@
 streamlit
 pandas
-torch
 pysentimiento==0.6.6
