@@ -97,37 +97,44 @@
 
 import streamlit as st
 import pandas as pd
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
+from transformers import pipeline, AutoTokenizer, AutoModelForSequenceClassification
 
-# Load the finetuned models
-MODEL_NAMES = ['bert-base-uncased', 'roberta-base', 'distilbert-base-uncased']
-MODELS = {model_name: (AutoTokenizer.from_pretrained(model_name),
-                       AutoModelForSequenceClassification.from_pretrained(model_name)) for model_name in MODEL_NAMES}
+# Load the test dataset
+df_test = pd.read_csv("test.csv")
 
-# Define the function for making predictions with a given model
-def predict(model_name, text):
-    tokenizer, model = MODELS[model_name]
-    inputs = tokenizer(text, return_tensors='pt')
+# Load the fine-tuned model and tokenizer
+model_name = st.selectbox("Select a fine-tuned model", ["bert-base-uncased", "roberta-base", "distilbert-base-uncased"])
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForSequenceClassification.from_pretrained(model_name)
+
+# Define a function to preprocess the text
+def preprocess_text(text):
+    text = text.strip()
+    text = text.lower()
+    return text
+
+# Define a function to classify the toxicity of each tweet
+def classify_toxicity(tweet):
+    tweet = preprocess_text(tweet)
+    inputs = tokenizer(tweet, return_tensors="pt", padding=True, truncation=True)
     outputs = model(**inputs)
     probs = outputs.logits.softmax(dim=1).detach().numpy()[0]
-    return probs
+    labels = ["toxicity", "threat", "obscene", "insult", "identity_hate"]
+    max_index = probs.argmax()
+    max_label = labels[max_index]
+    max_prob = probs[max_index]
+    return max_label, max_prob
 
-# Define the app
-def app():
-    # Set the title and subtitle
-    st.title("Toxicity Classification App")
-    st.markdown("## Using `streamlit` and HuggingFace - hosted on :hugging_face: Spaces")
-    
-    # Add a dropdown menu to select the model
-    model_name = st.selectbox('Select a finetuned model', MODEL_NAMES)
-    
-    # Add a text area to input the text
-    text = st.text_area('Enter a tweet')
-    
-    # Make the prediction and show the result in a table
-    if st.button('Classify'):
-        probs = predict(model_name, text)
-        labels = ['toxic', 'severe_toxic', 'obscene', 'threat', 'insult', 'identity_hate']
-        df = pd.DataFrame({'Text': [text]*len(labels), 'Class': labels, 'Probability': probs})
-        df = df.sort_values('Probability', ascending=False)
-        st.table(df[['Text', 'Class', 'Probability']])
+# Create a table showing the results
+st.title("Toxicity Classification")
+st.markdown("## Classify the toxicity of each tweet")
+st.write(df_test.head())
+
+results = []
+for index, row in df_test.iterrows():
+    tweet = row["tweet"]
+    label, prob = classify_toxicity(tweet)
+    results.append((tweet[:50] + "...", label, prob))
+
+df_results = pd.DataFrame(results, columns=["Tweet", "Toxicity Type", "Probability"])
+st.write(df_results)
