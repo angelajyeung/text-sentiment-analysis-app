@@ -25,8 +25,8 @@
 #     st.write(preds)
 
 import streamlit as st
-from transformers import pipeline
 import pandas as pd
+from transformers import pipeline
 
 # Set up the model and the tokenizer
 model_name = st.sidebar.selectbox("Select Model", ["bert-base-uncased", "roberta-base"])
@@ -35,7 +35,7 @@ toxicity_classes = ["threat", "obscene", "insult", "identity_hate"]
 
 # Define the function to extract the highest toxicity class and its probability
 def extract_toxicity(text):
-    results = model(text, multi_label=True)
+    results = model(text)
     max_class_idx = results[0]["scores"].argmax()
     return toxicity_classes[max_class_idx], results[0]["scores"][max_class_idx]
 
@@ -53,8 +53,7 @@ if st.sidebar.button("Run"):
     st.markdown("## Results")
     # Display the table of results
     for i, row in dataset.iterrows():
-        st.write(f"**Tweet {i+1}:** {row['comment_text']}")
-        # Extract the highest toxicity class and its probability
-        class_label, class_prob = extract_toxicity(row["comment_text"])
-        # Display the results in a table
-        st.table([[row["comment_text"], class_label, class_prob]])
+        tweet = row["comment_text"]
+        toxicity_class, probability = extract_toxicity(tweet)
+        data = [tweet, toxicity_class, probability]
+        st.write(pd.DataFrame([data], columns=columns))
