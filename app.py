@@ -99,6 +99,12 @@ import streamlit as st
 from transformers import pipeline, AutoModelForSequenceClassification, AutoTokenizer
 import pandas as pd
 
+#Title
+st.title("Toxic Comment Classification")
+
+# Subtitle
+st.markdown("## Multi-Class Classification - Using `HuggingFace` - Hosted on :hugging_face: Spaces")
+
 model_names = ["Fine-tuned Model"] # list of model names in your GitHub repo
 
 selected_model = st.selectbox("Select Model", model_names) # display the drop-down menu
