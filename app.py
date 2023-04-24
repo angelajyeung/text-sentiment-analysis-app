@@ -104,8 +104,8 @@ st.title("Toxicity Classification App")
 st.markdown("Select a model and enter a text to classify its toxicity.")
 
 model_name = "angelajyeung/model"
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = AutoModelForSequenceClassification.from_pretrained(model_name)
+# tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForSequenceClassification.from_pretrained(pretrained_model_name_or_path=model_name)
 # classifier = pipeline("text-classification", model=model, tokenizer=tokenizer)
 
 # Set up the dropdown menu with the model names
