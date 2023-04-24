@@ -98,33 +98,17 @@
 import streamlit as st
 import pandas as pd
 import torch
-import pickle
-from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
-import requests
+from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline, AutoConfig, FlaxAutoModelForVision2Seq
 
-url = "https://drive.google.com/file/d/19tQP8bWi-E_6sgEK60V5X3qN_X3r77QF/view?usp=share_link"
+# title
+st.title("Toxicity Classifier")
 
-# Define the URL and filename
-# url = "https://drive.google.com/uc?id=19tQP8bWi-E_6sgEK60V5X3qN_X3r77QF"
-filename = "model.pkl"
+# subtitle
+st.markdown("## Text Classification - Using `streamlit` -  hosted on 🤗 Spaces")
 
-# Download the file and load the model weights from the pickle file
-state_dict = torch.hub.load_state_dict_from_url(url, progress=True)
-with open(filename, "wb") as f:
-    pickle.dump({"weights": state_dict}, f)
-
-# Create the model architecture
-model = AutoModelForSequenceClassification.from_pretrained("model_name", num_labels=6)
-
-# Load the pretrained weights
-with open(filename, "rb") as f:
-    model.load_state_dict(pickle.load(f)["weights"])
-
-# Create the model architecture
-model = AutoModelForSequenceClassification.from_pretrained('bert-base-uncased', num_labels=6)
-
-# Load the pretrained weights
-model.load_state_dict(model_dict["weights"])
+# Download configuration from huggingface.co and cache.
+config = AutoConfig.from_pretrained("bert-base-uncased", path = "model_final", local_files_only = True)
+model = FlaxAutoModelForVision2Seq.from_config(config)
 
 # Define the tokenizer and the pipeline for inference
 tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
