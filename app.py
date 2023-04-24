@@ -108,13 +108,6 @@ model_name = "angelajyeung/model"
 model = AutoModelForSequenceClassification.from_pretrained(pretrained_model_name_or_path=model_name)
 # classifier = pipeline("text-classification", model=model, tokenizer=tokenizer)
 
-# Set up the dropdown menu with the model names
-model_names = ["Fine-tuned Model"]
-model_name = st.sidebar.selectbox('Select Model', model_names, index=0)
-
-# Set up the text area for user input
-text = st.text_area("Enter text here", "")
-
 # # Create a function to predict the toxicity class of the input text
 # def predict(text):
 #     prediction = classifier(text)
@@ -152,7 +145,7 @@ model_options = ["Fine-Tuned Model"]
 model_selection = st.selectbox("Select a model", model_options)
 
 # Text input
-text_input = st.text_input("Enter some text")
+text_input = st.text_area("Enter some text")
 
 # Classification
 if st.button("Classify"):
