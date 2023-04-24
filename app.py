@@ -107,7 +107,7 @@ st.markdown("## Using Streamlit and Hugging Face to Analyze Sentiments")
 
 # specify the GitHub URL and model file path
 github_url = "https://github.com/angelajyeung/text-sentiment-analysis-app"
-model_file_path = "blob/main/model_final/"
+model_file_path = "blob/main/model_final.ipynb/"
 
 # local directory to save the model and tokenizer files
 cache_dir = "./cache"
