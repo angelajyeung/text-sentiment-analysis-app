@@ -99,37 +99,42 @@ import streamlit as st
 from transformers import pipeline, AutoModelForSequenceClassification, AutoTokenizer
 import pandas as pd
 
-#Title
-st.title("Toxic Comment Classification")
+# title
+st.title("Sentiment Analysis App")
 
-# Subtitle
-st.markdown("## Multi-Class Classification - Using `HuggingFace` - Hosted on :hugging_face: Spaces")
+# subtitle
+st.markdown("## Using Streamlit and Hugging Face to Analyze Sentiments")
 
-model_names = ["Fine-tuned Model"] # list of model names in your GitHub repo
+# Sidebar menu to select model
+model_file = st.sidebar.selectbox("Select Model", ["model_final"])
 
-selected_model = st.selectbox("Select Model", model_names) # display the drop-down menu
+# Load the model and tokenizer
+model = AutoModelForSequenceClassification.from_pretrained(model_file)
+tokenizer = AutoTokenizer.from_pretrained(model_file)
 
-model_path = f"username/{selected_model}" # the path to the selected model in your GitHub repo
-model = AutoModelForSequenceClassification.from_pretrained(model_path)
-tokenizer = AutoTokenizer.from_pretrained(model_path)
-classifier = pipeline(task="sentiment-analysis", model=model, tokenizer=tokenizer) # use the selected model for sentiment analysis
+# sentiment analyzer pipeline
+classifier = pipeline("text-classification", model=model, tokenizer=tokenizer)
 
-def analyze_sentiment(text):
-    prediction = classifier(text)
-    df = pd.DataFrame(prediction, columns=["sentiment", "score"])
-    return df
+# text input
+default = "I am happy today."
+text = st.text_area("Enter text here", "")
 
+# sentiment analysis of input text
 if st.button("Submit"):
     # analyze the text
-    df = analyze_sentiment(text)
-    max_idx = df["score"].idxmax()
-    second_max_idx = df["score"].sort_values(ascending=False).index[1]
-    st.write(
-        pd.DataFrame({
-            "text": [text],
-            "sentiment1": [df.loc[max_idx, "sentiment"]],
-            "score1": [df.loc[max_idx, "score"]],
-            "sentiment2": [df.loc[second_max_idx, "sentiment"]],
-            "score2": [df.loc[second_max_idx, "score"]]
-        })
-    )
+    prediction = classifier(text, return_all_scores=True)
+
+    # store the results in a dataframe
+    df = pd.DataFrame(prediction, columns=['Label', 'Score'])
+
+    # sort the dataframe by scores in descending order
+    df = df.sort_values(by='Score', ascending=False).reset_index(drop=True)
+
+    # extract the top 2 labels and scores
+    top1_label, top1_score = df.iloc[0]['Label'], df.iloc[0]['Score']
+    top2_label, top2_score = df.iloc[1]['Label'], df.iloc[1]['Score']
+
+    # display the results in a table
+    st.write(pd.DataFrame({'Tweet': [text], 
+                           'Highest Label': [top1_label], 'Highest Score': [top1_score], 
+                           'Second Highest Label': [top2_label], 'Second Highest Score': [top2_score]}))
