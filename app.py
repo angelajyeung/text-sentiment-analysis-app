@@ -118,7 +118,6 @@ classifier = load_model(model_name)
 text = st.text_area("Enter text here", "")
 if st.button("Submit"):
     prediction = classifier(text)
-
     # Create pandas dataframe to display output in table
     df = pd.DataFrame(prediction)
     df = df.rename(columns={'label': 'Highest Class', 'score': 'Probability'})
