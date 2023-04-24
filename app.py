@@ -107,7 +107,7 @@ st.markdown("## Using Streamlit and Hugging Face to Analyze Sentiments")
 
 # specify the GitHub URL and model file path
 github_url = "https://github.com/angelajyeung/text-sentiment-analysis-app"
-model_file_path = "model_final"
+model_file_path = "model_final.ipynb"
 
 # load the model and tokenizer from the GitHub repository
 model = AutoModelForSequenceClassification.from_pretrained(f"{github_url}/{model_file_path}")
