@@ -98,68 +98,6 @@
 # import streamlit as st
 # import pandas as pd
 # import torch
-# from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline, AutoConfig, FlaxAutoModelForVision2Seq
-
-# st.title("Toxicity Classification App")
-# st.markdown("Select a model and enter a text to classify its toxicity.")
-
-# model_name = "angelajyeung/model"
-# # tokenizer = AutoTokenizer.from_pretrained(model_name)
-# model = AutoModelForSequenceClassification.from_pretrained(pretrained_model_name_or_path=model_name)
-# # classifier = pipeline("text-classification", model=model, tokenizer=tokenizer)
-
-# # # Create a function to predict the toxicity class of the input text
-# # def predict(text):
-# #     prediction = classifier(text)
-
-# #     # Sort the predictions by probability in descending order
-# #     sorted_predictions = sorted(prediction, key=lambda x: x["score"], reverse=True)
-
-# #     # Create a dataframe with the predictions
-# #     df = pd.DataFrame(sorted_predictions[:2])
-# #     df = df.rename(columns={'label': 'Toxicity Class', 'score': 'Probability'})
-# #     df["Rank"] = df["Probability"].rank(method="dense", ascending=False)
-# #     df = df[["Rank", "Toxicity Class", "Probability"]]
-
-# #     return df
-
-# def predict(text):
-#     inputs = tokenizer.encode_plus(
-#         text,
-#         max_length=128,
-#         truncation=True,
-#         padding="max_length",
-#         return_tensors="pt"
-#     )
-
-#     outputs = model(**inputs)
-#     probabilities = torch.softmax(outputs.logits, dim=1).detach().cpu().numpy()[0]
-
-#     classes = tokenizer.get_vocab().keys()
-#     results = sorted(zip(classes, probabilities), key=lambda x: x[1], reverse=True)
-
-#     return pd.DataFrame(results[:2], columns=["Toxicity Class", "Probability"])
-
-# # Model selection
-# model_options = ["Fine-Tuned Model"]
-# model_selection = st.selectbox("Select a model", model_options)
-
-# # Text input
-# text_input = st.text_area("Enter some text")
-
-# # Classification
-# if st.button("Classify"):
-#     results = predict(text_input)
-#     st.dataframe(results)
-
-# # Show the predictions in a table when the user clicks the "Submit" button
-# if st.button("Submit"):
-#     df = predict(text)
-#     st.write(df)
-
-# import streamlit as st
-# import pandas as pd
-# import torch
 # from transformers import AutoTokenizer, AutoModelForSequenceClassification, FlaxAutoModelForVision2Seq
 
 # st.title("Toxicity Classification App")
@@ -198,10 +136,51 @@
 #     results = predict(text_input)
 #     st.dataframe(results)
 
+# import streamlit as st
+# import pandas as pd
+# import torch
+# from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline, AutoConfig
+
+# st.title("Toxicity Classification App")
+# st.markdown("Select a model and enter a text to classify its toxicity.")
+
+# model_name = "angelajyeung/model"
+# model = AutoModelForSequenceClassification.from_pretrained(pretrained_model_name_or_path=model_name)
+# tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
+
+# def predict(text, tokenizer):
+#     inputs = tokenizer.encode_plus(
+#         text,
+#         max_length=128,
+#         truncation=True,
+#         padding="max_length",
+#         return_tensors="pt"
+#     )
+
+#     outputs = model(**inputs)
+#     probabilities = torch.softmax(outputs.logits, dim=1).detach().cpu().numpy()[0]
+
+#     classes = tokenizer.get_vocab().keys()
+#     results = sorted(zip(classes, probabilities), key=lambda x: x[1], reverse=True)
+
+#     return pd.DataFrame(results[:2], columns=["Toxicity Class", "Probability"])
+
+# # Model selection
+# model_options = ["Fine-Tuned Model"]
+# model_selection = st.selectbox("Select a model", model_options)
+
+# # Text input
+# text_input = st.text_area("Enter some text")
+
+# # Classification
+# if st.button("Classify"):
+#     results = predict(text_input, tokenizer)
+#     st.dataframe(results)
+
 import streamlit as st
 import pandas as pd
 import torch
-from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline, AutoConfig
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
 st.title("Toxicity Classification App")
 st.markdown("Select a model and enter a text to classify its toxicity.")
@@ -227,6 +206,25 @@ def predict(text, tokenizer):
 
     return pd.DataFrame(results[:2], columns=["Toxicity Class", "Probability"])
 
+# Read tweets from the test dataset
+test_df = pd.read_csv("test.csv")
+tweets = test_df["comment_text"].tolist()[:10]
+
+# Prepopulate table with tweets and their classifications
+results = []
+for tweet in tweets:
+    result = predict(tweet, tokenizer)
+    result_dict = {
+        "Text": tweet,
+        "Class 1": result.iloc[0]["Toxicity Class"],
+        "Probability 1": result.iloc[0]["Probability"],
+        "Class 2": result.iloc[1]["Toxicity Class"],
+        "Probability 2": result.iloc[1]["Probability"]
+    }
+    results.append(result_dict)
+prepopulated_df = pd.DataFrame(results)
+st.dataframe(prepopulated_df)
+
 # Model selection
 model_options = ["Fine-Tuned Model"]
 model_selection = st.selectbox("Select a model", model_options)
@@ -237,4 +235,12 @@ text_input = st.text_area("Enter some text")
 # Classification
 if st.button("Classify"):
     results = predict(text_input, tokenizer)
-    st.dataframe(results)
+    result_dict = {
+        "Text": text_input,
+        "Class 1": results.iloc[0]["Toxicity Class"],
+        "Probability 1": results.iloc[0]["Probability"],
+        "Class 2": results.iloc[1]["Toxicity Class"],
+        "Probability 2": results.iloc[1]["Probability"]
+    }
+    classification_df = pd.DataFrame([result_dict])
+    st.dataframe(classification_df)
