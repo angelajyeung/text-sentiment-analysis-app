@@ -102,10 +102,10 @@ import pickle
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
 import requests
 
-# url = "https://drive.google.com/file/d/19tQP8bWi-E_6sgEK60V5X3qN_X3r77QF/view?usp=share_link"
+url = "https://drive.google.com/file/d/19tQP8bWi-E_6sgEK60V5X3qN_X3r77QF/view?usp=share_link"
 
 # Define the URL and filename
-url = "https://drive.google.com/uc?id=19tQP8bWi-E_6sgEK60V5X3qN_X3r77QF"
+# url = "https://drive.google.com/uc?id=19tQP8bWi-E_6sgEK60V5X3qN_X3r77QF"
 filename = "model.pkl"
 
 # Download the file and load the model weights from the pickle file
