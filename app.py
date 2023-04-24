@@ -112,7 +112,7 @@ def load_model(model_name):
 
 # Set default model to 'model_final' and create drop-down menu
 model_name = st.sidebar.selectbox('Select Model', model_names, index=0)
-classifier = load_model(model_name)
+classifier = load_model('model_final.ipynb')
 
 # Text area for user input and button to trigger sentiment analysis
 text = st.text_area("Enter text here", "")
