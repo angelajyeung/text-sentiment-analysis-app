@@ -97,33 +97,47 @@
 
 import streamlit as st
 import pandas as pd
+import torch
+import pickle
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
 
-# List of model names
-model_names = ['model_final']
+# Load the model from the pickle file
+with open("model.pkl", "rb") as f:
+    model_dict = pickle.load(f)
 
-# Function to load the selected model
-@st.cache(allow_output_mutation=True)
-def load_model(model_name):
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-    model = AutoModelForSequenceClassification.from_pretrained(model_name)
-    classifier = pipeline('text-classification', model=model, tokenizer=tokenizer)
-    return classifier
+# Create the model architecture
+model = AutoModelForSequenceClassification.from_pretrained("model_name", num_labels=6)
 
-# Set default model to 'model_final' and create drop-down menu
+# Load the pretrained weights
+model.load_state_dict(model_dict["weights"])
+
+# Define the tokenizer and the pipeline for inference
+tokenizer = AutoTokenizer.from_pretrained("model_final")
+classifier = pipeline("text-classification", model=model, tokenizer=tokenizer)
+
+# Set up the dropdown menu with the model names
+model_names = ["fine-tuned model"]
 model_name = st.sidebar.selectbox('Select Model', model_names, index=0)
-classifier = load_model('model_final.ipynb')
 
-# Text area for user input and button to trigger sentiment analysis
+# Set up the text area for user input
 text = st.text_area("Enter text here", "")
-if st.button("Submit"):
+
+# Create a function to predict the toxicity class of the input text
+def predict(text):
     prediction = classifier(text)
-    # Create pandas dataframe to display output in table
-    df = pd.DataFrame(prediction)
-    df = df.rename(columns={'label': 'Highest Class', 'score': 'Probability'})
-    df['Rank'] = df.groupby(['Highest Class'])['Probability'].rank(ascending=False, method='first')
-    df['Rank'] = df['Rank'].astype(int)
-    df = df.pivot(index=None, columns='Rank', values=['Highest Class', 'Probability'])
-    df.columns = ['_'.join(map(str, col)) for col in df.columns]
-    df = df.reset_index(drop=True)
+
+    # Sort the predictions by probability in descending order
+    sorted_predictions = sorted(prediction, key=lambda x: x["score"], reverse=True)
+
+    # Create a dataframe with the predictions
+    df = pd.DataFrame(sorted_predictions[:2])
+    df = df.rename(columns={'label': 'Toxicity Class', 'score': 'Probability'})
+    df["Rank"] = df["Probability"].rank(method="dense", ascending=False)
+    df = df[["Rank", "Toxicity Class", "Probability"]]
+
+    return df
+
+# Show the predictions in a table when the user clicks the "Submit" button
+if st.button("Submit"):
+    df = predict(text)
     st.write(df)
