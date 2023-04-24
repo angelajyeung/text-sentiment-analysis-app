@@ -100,19 +100,13 @@ import pandas as pd
 import torch
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline, AutoConfig, FlaxAutoModelForVision2Seq
 
-# title
-st.title("Toxicity Classifier")
+st.title("Toxicity Classification App")
+st.markdown("Select a model and enter a text to classify its toxicity.")
 
-# subtitle
-st.markdown("## Text Classification - Using `streamlit` -  hosted on 🤗 Spaces")
-
-# Download configuration from huggingface.co and cache.
-config = AutoConfig.from_pretrained("bert-base-uncased", path = "model_final", local_files_only = True)
-model = FlaxAutoModelForVision2Seq.from_config(config)
-
-# Define the tokenizer and the pipeline for inference
-tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
-classifier = pipeline("text-classification", model=model, tokenizer=tokenizer)
+model_name = "angelajyeung/model"
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForSequenceClassification.from_pretrained(model_name)
+# classifier = pipeline("text-classification", model=model, tokenizer=tokenizer)
 
 # Set up the dropdown menu with the model names
 model_names = ["Fine-tuned Model"]
@@ -121,22 +115,51 @@ model_name = st.sidebar.selectbox('Select Model', model_names, index=0)
 # Set up the text area for user input
 text = st.text_area("Enter text here", "")
 
-# Create a function to predict the toxicity class of the input text
+# # Create a function to predict the toxicity class of the input text
+# def predict(text):
+#     prediction = classifier(text)
+
+#     # Sort the predictions by probability in descending order
+#     sorted_predictions = sorted(prediction, key=lambda x: x["score"], reverse=True)
+
+#     # Create a dataframe with the predictions
+#     df = pd.DataFrame(sorted_predictions[:2])
+#     df = df.rename(columns={'label': 'Toxicity Class', 'score': 'Probability'})
+#     df["Rank"] = df["Probability"].rank(method="dense", ascending=False)
+#     df = df[["Rank", "Toxicity Class", "Probability"]]
+
+#     return df
+
 def predict(text):
-    prediction = classifier(text)
+    inputs = tokenizer.encode_plus(
+        text,
+        max_length=128,
+        truncation=True,
+        padding="max_length",
+        return_tensors="pt"
+    )
 
-    # Sort the predictions by probability in descending order
-    sorted_predictions = sorted(prediction, key=lambda x: x["score"], reverse=True)
+    outputs = model(**inputs)
+    probabilities = torch.softmax(outputs.logits, dim=1).detach().cpu().numpy()[0]
 
-    # Create a dataframe with the predictions
-    df = pd.DataFrame(sorted_predictions[:2])
-    df = df.rename(columns={'label': 'Toxicity Class', 'score': 'Probability'})
-    df["Rank"] = df["Probability"].rank(method="dense", ascending=False)
-    df = df[["Rank", "Toxicity Class", "Probability"]]
+    classes = tokenizer.get_vocab().keys()
+    results = sorted(zip(classes, probabilities), key=lambda x: x[1], reverse=True)
 
-    return df
+    return pd.DataFrame(results[:2], columns=["Toxicity Class", "Probability"])
 
-# Show the predictions in a table when the user clicks the "Submit" button
-if st.button("Submit"):
-    df = predict(text)
-    st.write(df)
+# Model selection
+model_options = ["Fine-Tuned Model"]
+model_selection = st.selectbox("Select a model", model_options)
+
+# Text input
+text_input = st.text_input("Enter some text")
+
+# Classification
+if st.button("Classify"):
+    results = predict(text_input)
+    st.dataframe(results)
+
+# # Show the predictions in a table when the user clicks the "Submit" button
+# if st.button("Submit"):
+#     df = predict(text)
+#     st.write(df)
