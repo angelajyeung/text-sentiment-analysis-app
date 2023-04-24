@@ -105,18 +105,25 @@ st.title("Sentiment Analysis App")
 # subtitle
 st.markdown("## Using Streamlit and Hugging Face to Analyze Sentiments")
 
-# Sidebar menu to select model
-model_file = st.sidebar.selectbox("Select Model", ["model_final"])
+# specify the GitHub URL and model file path
+github_url = "https://github.com/angelajyeung/text-sentiment-analysis-app"
+model_file_path = "model_final"
 
-# Load the model and tokenizer
-model = AutoModelForSequenceClassification.from_pretrained(model_file)
-tokenizer = AutoTokenizer.from_pretrained(model_file)
+# load the model and tokenizer from the GitHub repository
+model = AutoModelForSequenceClassification.from_pretrained(f"{github_url}/{model_file_path}")
+tokenizer = AutoTokenizer.from_pretrained(f"{github_url}/{model_file_path}")
+
+# Sidebar menu to select model
+model_file = st.selectbox("Select Model", ["Fine-tuned model"])
+
+# # Load the model and tokenizer
+# model = AutoModelForSequenceClassification.from_pretrained(model_file)
+# tokenizer = AutoTokenizer.from_pretrained(model_file)
 
 # sentiment analyzer pipeline
 classifier = pipeline("text-classification", model=model, tokenizer=tokenizer)
 
 # text input
-default = "I am happy today."
 text = st.text_area("Enter text here", "")
 
 # sentiment analysis of input text
