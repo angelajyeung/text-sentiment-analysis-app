@@ -160,14 +160,14 @@
 import streamlit as st
 import pandas as pd
 import torch
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
+from transformers import AutoTokenizer, AutoModelForSequenceClassification, FlaxAutoModelForVision2Seq
 
 st.title("Toxicity Classification App")
 st.markdown("Select a model and enter a text to classify its toxicity.")
 
 model_name = "angelajyeung/model"
-model = AutoModelForSequenceClassification.from_pretrained(pretrained_model_name_or_path=model_name)
-tokenizer = AutoTokenizer.from_pretrained(pretrained_model_name_or_path=model_name)
+model = FlaxAutoModelForVision2Seq.from_pretrained(pretrained_model_name_or_path=model_name)
+tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
 
 def predict(text):
     inputs = tokenizer.encode_plus(
