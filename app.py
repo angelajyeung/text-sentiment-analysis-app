@@ -95,58 +95,36 @@
 # if __name__ == "__main__":
 #     main()
 
-import os
 import streamlit as st
-from transformers import pipeline, AutoModelForSequenceClassification, AutoTokenizer
+import pandas as pd
+from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
 
-# title
-st.title("Sentiment Analysis App")
+# List of model names
+model_names = ['model_final']
 
-# subtitle
-st.markdown("## Using Streamlit and Hugging Face to Analyze Sentiments")
+# Function to load the selected model
+@st.cache(allow_output_mutation=True)
+def load_model(model_name):
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    model = AutoModelForSequenceClassification.from_pretrained(model_name)
+    classifier = pipeline('text-classification', model=model, tokenizer=tokenizer)
+    return classifier
 
-# specify the GitHub URL and model file path
-github_url = "https://github.com/angelajyeung/text-sentiment-analysis-app"
-model_file_path = "blob/main/model_final.ipynb/"
+# Set default model to 'model_final' and create drop-down menu
+model_name = st.sidebar.selectbox('Select Model', model_names, index=0)
+classifier = load_model(model_name)
 
-# local directory to save the model and tokenizer files
-cache_dir = "./cache"
-
-# create the cache directory if it does not exist
-os.makedirs(cache_dir, exist_ok=True)
-
-# download and save the model and tokenizer files
-model = AutoModelForSequenceClassification.from_pretrained(
-    f"{github_url}/{model_file_path}",
-    local_cache_dir=cache_dir
-)
-tokenizer = AutoTokenizer.from_pretrained(
-    f"{github_url}/{model_file_path}",
-    local_cache_dir=cache_dir
-)
-
-# sentiment analyzer pipeline
-classifier = pipeline("text-classification", model=model, tokenizer=tokenizer)
-
-# text input
+# Text area for user input and button to trigger sentiment analysis
 text = st.text_area("Enter text here", "")
-
-# sentiment analysis of input text
 if st.button("Submit"):
-    # analyze the text
-    prediction = classifier(text, return_all_scores=True)
+    prediction = classifier(text)
 
-    # store the results in a dataframe
-    df = pd.DataFrame(prediction, columns=['Label', 'Score'])
-
-    # sort the dataframe by scores in descending order
-    df = df.sort_values(by='Score', ascending=False).reset_index(drop=True)
-
-    # extract the top 2 labels and scores
-    top1_label, top1_score = df.iloc[0]['Label'], df.iloc[0]['Score']
-    top2_label, top2_score = df.iloc[1]['Label'], df.iloc[1]['Score']
-
-    # display the results in a table
-    st.write(pd.DataFrame({'Tweet': [text], 
-                           'Highest Label': [top1_label], 'Highest Score': [top1_score], 
-                           'Second Highest Label': [top2_label], 'Second Highest Score': [top2_score]}))
+    # Create pandas dataframe to display output in table
+    df = pd.DataFrame(prediction)
+    df = df.rename(columns={'label': 'Highest Class', 'score': 'Probability'})
+    df['Rank'] = df.groupby(['Highest Class'])['Probability'].rank(ascending=False, method='first')
+    df['Rank'] = df['Rank'].astype(int)
+    df = df.pivot(index=None, columns='Rank', values=['Highest Class', 'Probability'])
+    df.columns = ['_'.join(map(str, col)) for col in df.columns]
+    df = df.reset_index(drop=True)
+    st.write(df)
