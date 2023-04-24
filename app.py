@@ -100,23 +100,38 @@ import pandas as pd
 import torch
 import pickle
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
+import requests
 
-# Load the model from the pickle file
-with open("model.pkl", "rb") as f:
-    model_dict = pickle.load(f)
+# url = "https://drive.google.com/file/d/19tQP8bWi-E_6sgEK60V5X3qN_X3r77QF/view?usp=share_link"
+
+# Define the URL and filename
+url = "https://drive.google.com/uc?id=19tQP8bWi-E_6sgEK60V5X3qN_X3r77QF"
+filename = "model.pkl"
+
+# Download the file and load the model weights from the pickle file
+state_dict = torch.hub.load_state_dict_from_url(url, progress=True)
+with open(filename, "wb") as f:
+    pickle.dump({"weights": state_dict}, f)
 
 # Create the model architecture
 model = AutoModelForSequenceClassification.from_pretrained("model_name", num_labels=6)
 
 # Load the pretrained weights
+with open(filename, "rb") as f:
+    model.load_state_dict(pickle.load(f)["weights"])
+
+# Create the model architecture
+model = AutoModelForSequenceClassification.from_pretrained('bert-base-uncased', num_labels=6)
+
+# Load the pretrained weights
 model.load_state_dict(model_dict["weights"])
 
 # Define the tokenizer and the pipeline for inference
-tokenizer = AutoTokenizer.from_pretrained("model_final")
+tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
 classifier = pipeline("text-classification", model=model, tokenizer=tokenizer)
 
 # Set up the dropdown menu with the model names
-model_names = ["fine-tuned model"]
+model_names = ["Fine-tuned Model"]
 model_name = st.sidebar.selectbox('Select Model', model_names, index=0)
 
 # Set up the text area for user input
