@@ -109,9 +109,14 @@ st.markdown("## Using Streamlit and Hugging Face to Analyze Sentiments")
 github_url = "https://github.com/angelajyeung/text-sentiment-analysis-app"
 model_file_path = "blob/main/model_final.ipynb"
 
-# load the model and tokenizer from the GitHub repository
-model = AutoModelForSequenceClassification.from_pretrained(f"{github_url}/{model_file_path}")
-tokenizer = AutoTokenizer.from_pretrained(f"{github_url}/{model_file_path}")
+# specify local directory to save model and tokenizer
+model_dir = "my_model"
+tokenizer_dir = "my_tokenizer"
+
+# load the model and tokenizer from the GitHub repository and save locally
+model = AutoModelForSequenceClassification.from_pretrained(f"{github_url}/{model_file_path}", local_cache_dir=model_dir)
+tokenizer = AutoTokenizer.from_pretrained(f"{github_url}/{model_file_path}", local_cache_dir=tokenizer_dir)
+
 
 # Sidebar menu to select model
 model_file = st.selectbox("Select Model", ["Fine-tuned model"])
