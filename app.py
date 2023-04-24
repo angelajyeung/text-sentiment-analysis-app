@@ -157,19 +157,60 @@
 #     df = predict(text)
 #     st.write(df)
 
+# import streamlit as st
+# import pandas as pd
+# import torch
+# from transformers import AutoTokenizer, AutoModelForSequenceClassification, FlaxAutoModelForVision2Seq
+
+# st.title("Toxicity Classification App")
+# st.markdown("Select a model and enter a text to classify its toxicity.")
+
+# model_name = "angelajyeung/model"
+# model = AutoModelForSequenceClassification.from_pretrained(pretrained_model_name_or_path=model_name)
+# tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
+
+# def predict(text):
+#     inputs = tokenizer.encode_plus(
+#         text,
+#         max_length=128,
+#         truncation=True,
+#         padding="max_length",
+#         return_tensors="pt"
+#     )
+
+#     outputs = model(**inputs)
+#     probabilities = torch.softmax(outputs.logits, dim=1).detach().cpu().numpy()[0]
+
+#     classes = list(tokenizer.get_vocab().keys())  
+#     results = sorted(zip(classes, probabilities), key=lambda x: x[1], reverse=True)
+
+#     return pd.DataFrame(results[:2], columns=[classes[0], classes[1]])
+
+# # Model selection
+# model_options = ["Fine-Tuned Model"]
+# model_selection = st.selectbox("Select a model", model_options)
+
+# # Text input
+# text_input = st.text_area("Enter some text")
+
+# # Classification
+# if st.button("Classify"):
+#     results = predict(text_input)
+#     st.dataframe(results)
+
 import streamlit as st
 import pandas as pd
 import torch
-from transformers import AutoTokenizer, AutoModelForSequenceClassification, FlaxAutoModelForVision2Seq
+from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline, AutoConfig
 
 st.title("Toxicity Classification App")
 st.markdown("Select a model and enter a text to classify its toxicity.")
 
 model_name = "angelajyeung/model"
 model = AutoModelForSequenceClassification.from_pretrained(pretrained_model_name_or_path=model_name)
-tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
+tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased)
 
-def predict(text):
+def predict(text, tokenizer):
     inputs = tokenizer.encode_plus(
         text,
         max_length=128,
@@ -181,10 +222,10 @@ def predict(text):
     outputs = model(**inputs)
     probabilities = torch.softmax(outputs.logits, dim=1).detach().cpu().numpy()[0]
 
-    classes = list(tokenizer.get_vocab().keys())[1:]  # Remove the [PAD] token
+    classes = tokenizer.get_vocab().keys()
     results = sorted(zip(classes, probabilities), key=lambda x: x[1], reverse=True)
 
-    return pd.DataFrame(results[:2], columns=[classes[0], classes[1]])
+    return pd.DataFrame(results[:2], columns=["Toxicity Class", "Probability"])
 
 # Model selection
 model_options = ["Fine-Tuned Model"]
@@ -195,5 +236,5 @@ text_input = st.text_area("Enter some text")
 
 # Classification
 if st.button("Classify"):
-    results = predict(text_input)
+    results = predict(text_input, tokenizer)
     st.dataframe(results)
