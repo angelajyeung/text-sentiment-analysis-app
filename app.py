@@ -96,40 +96,34 @@
 #     main()
 
 import streamlit as st
+from transformers import pipeline, AutoModelForSequenceClassification, AutoTokenizer
 import pandas as pd
-from transformers import pipeline, AutoTokenizer, AutoModelForSequenceClassification
 
-# Define the models and their names
-models = {
-    "BERT": "bert-base-uncased",
-    "RoBERTa": "roberta-base"
-}
+model_names = ["Fine-tuned Model"] # list of model names in your GitHub repo
 
-# Title and subtitle
-st.title("Toxicity Classifier")
-st.markdown("## Detect different types of toxicity in text")
+selected_model = st.selectbox("Select Model", model_names) # display the drop-down menu
 
-# Model selection dropdown
-model_name = st.selectbox("Select a model", list(models.keys()))
+model_path = f"username/{selected_model}" # the path to the selected model in your GitHub repo
+model = AutoModelForSequenceClassification.from_pretrained(model_path)
+tokenizer = AutoTokenizer.from_pretrained(model_path)
+classifier = pipeline(task="sentiment-analysis", model=model, tokenizer=tokenizer) # use the selected model for sentiment analysis
 
-# Load the tokenizer and the model
-tokenizer = AutoTokenizer.from_pretrained(models[model_name])
-model = AutoModelForSequenceClassification.from_pretrained(models[model_name])
+def analyze_sentiment(text):
+    prediction = classifier(text)
+    df = pd.DataFrame(prediction, columns=["sentiment", "score"])
+    return df
 
-# Set up the pipeline for sentiment analysis
-toxicity_classifier = pipeline("text-classification", model=model, tokenizer=tokenizer, return_all_scores=True)
-
-# Load the test data
-test_data = pd.read_csv("test.csv")
-
-# Process each tweet and get the highest toxicity class and its probability
-toxicities = []
-for tweet in test_data["comment_text"]:
-    result = toxicity_classifier(tweet)[0]
-    highest_toxicity_index = max(range(len(result["scores"])), key=lambda i: result["scores"][i])
-    highest_toxicity_label = toxicity_classifier.model.config.id2label[highest_toxicity_index]
-    highest_toxicity_score = result["scores"][highest_toxicity_index]
-    toxicities.append((tweet[:50], highest_toxicity_label, highest_toxicity_score))
-
-# Display the results in a table
-st.write(pd.DataFrame(toxicities, columns=["Tweet", "Toxicity Class", "Probability"]))
+if st.button("Submit"):
+    # analyze the text
+    df = analyze_sentiment(text)
+    max_idx = df["score"].idxmax()
+    second_max_idx = df["score"].sort_values(ascending=False).index[1]
+    st.write(
+        pd.DataFrame({
+            "text": [text],
+            "sentiment1": [df.loc[max_idx, "sentiment"]],
+            "score1": [df.loc[max_idx, "score"]],
+            "sentiment2": [df.loc[second_max_idx, "sentiment"]],
+            "score2": [df.loc[second_max_idx, "score"]]
+        })
+    )
