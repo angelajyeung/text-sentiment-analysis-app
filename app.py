@@ -95,9 +95,9 @@
 # if __name__ == "__main__":
 #     main()
 
+import os
 import streamlit as st
 from transformers import pipeline, AutoModelForSequenceClassification, AutoTokenizer
-import pandas as pd
 
 # title
 st.title("Sentiment Analysis App")
@@ -107,23 +107,23 @@ st.markdown("## Using Streamlit and Hugging Face to Analyze Sentiments")
 
 # specify the GitHub URL and model file path
 github_url = "https://github.com/angelajyeung/text-sentiment-analysis-app"
-model_file_path = "blob/main/model_final.ipynb"
+model_file_path = "blob/main/model_final/"
 
-# specify local directory to save model and tokenizer
-model_dir = "my_model"
-tokenizer_dir = "my_tokenizer"
+# local directory to save the model and tokenizer files
+cache_dir = "./cache"
 
-# load the model and tokenizer from the GitHub repository and save locally
-model = AutoModelForSequenceClassification.from_pretrained(f"{github_url}/{model_file_path}", local_cache_dir=model_dir)
-tokenizer = AutoTokenizer.from_pretrained(f"{github_url}/{model_file_path}", local_cache_dir=tokenizer_dir)
+# create the cache directory if it does not exist
+os.makedirs(cache_dir, exist_ok=True)
 
-
-# Sidebar menu to select model
-model_file = st.selectbox("Select Model", ["Fine-tuned model"])
-
-# # Load the model and tokenizer
-# model = AutoModelForSequenceClassification.from_pretrained(model_file)
-# tokenizer = AutoTokenizer.from_pretrained(model_file)
+# download and save the model and tokenizer files
+model = AutoModelForSequenceClassification.from_pretrained(
+    f"{github_url}/{model_file_path}",
+    local_cache_dir=cache_dir
+)
+tokenizer = AutoTokenizer.from_pretrained(
+    f"{github_url}/{model_file_path}",
+    local_cache_dir=cache_dir
+)
 
 # sentiment analyzer pipeline
 classifier = pipeline("text-classification", model=model, tokenizer=tokenizer)
