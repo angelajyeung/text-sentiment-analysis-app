@@ -208,7 +208,7 @@ st.markdown("Select a model and enter a text to classify its toxicity.")
 
 model_name = "angelajyeung/model"
 model = AutoModelForSequenceClassification.from_pretrained(pretrained_model_name_or_path=model_name)
-tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased)
+tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
 
 def predict(text, tokenizer):
     inputs = tokenizer.encode_plus(
