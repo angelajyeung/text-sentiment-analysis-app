@@ -14,7 +14,7 @@ classifier = pipeline(task="sentiment-analysis")
 
 # text input
 default = "I am happy today."
-text = st.text_area("Enter text here", "")
+text = st.text_area("Enter text here", default)
 
 # sentiment analysis of input text
 if st.button("Submit"):
